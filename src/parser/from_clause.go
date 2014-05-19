@@ -12,9 +12,10 @@ import "fmt"
 type FromClauseType int
 
 const (
-	FromClauseArray     FromClauseType = C.FROM_ARRAY
-	FromClauseMerge     FromClauseType = C.FROM_MERGE
-	FromClauseInnerJoin FromClauseType = C.FROM_INNER_JOIN
+	FromClauseArray        FromClauseType = C.FROM_ARRAY
+	FromClauseMerge        FromClauseType = C.FROM_MERGE
+	FromClauseInnerJoin    FromClauseType = C.FROM_INNER_JOIN
+	FromClauseFunctionCall FromClauseType = C.FROM_FUNCTION_CALL
 )
 
 func (self *TableName) GetAlias() string {
@@ -37,8 +38,9 @@ type TableName struct {
 }
 
 type FromClause struct {
-	Type  FromClauseType
-	Names []*TableName
+	Type         FromClauseType
+	Names        []*TableName
+	FunctionCall *Value
 }
 
 func (self *FromClause) GetString() string {
@@ -50,6 +52,12 @@ func (self *FromClause) GetString() string {
 	case FromClauseInnerJoin:
 		fmt.Fprintf(buffer, "%s%s inner join %s%s", self.Names[0].Name.GetString(), self.Names[0].GetAliasString(),
 			self.Names[1].Name.GetString(), self.Names[1].GetAliasString())
+	case FromClauseFunctionCall:
+		names := make([]string, 0, len(self.FunctionCall.Elems))
+		for _, n := range self.FunctionCall.Elems {
+			names = append(names, n.Name)
+		}
+		buffer.WriteString(self.FunctionCall.Name + "(" + strings.Join(names, ",") + ")")
 	default:
 		names := make([]string, 0, len(self.Names))
 		for _, t := range self.Names {

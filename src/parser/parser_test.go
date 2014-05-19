@@ -2,9 +2,9 @@ package parser
 
 import (
 	"fmt"
+	. "launchpad.net/gocheck"
 	"testing"
 	"time"
-	. "launchpad.net/gocheck"
 )
 
 // Hook up gocheck into the gotest runner.
@@ -236,6 +236,20 @@ func (self *QueryParserSuite) TestParseFromWithMergedTable(c *C) {
 	c.Assert(fromClause.Names, HasLen, 2)
 	c.Assert(fromClause.Names[0].Name.Name, Equals, "newsletter.signups")
 	c.Assert(fromClause.Names[1].Name.Name, Equals, "user.signups")
+}
+
+func (self *QueryParserSuite) TestParseFromWithFunctionCall(c *C) {
+	q, err := ParseSelectQuery("select * from function_name(t)")
+	c.Assert(err, IsNil)
+
+	fromClause := q.GetFromClause()
+	c.Assert(fromClause.Type, Equals, FromClauseFunctionCall)
+	c.Assert(fromClause.Names, HasLen, 0)
+
+	c.Assert(fromClause.FunctionCall.IsFunctionCall(), Equals, true)
+	c.Assert(fromClause.FunctionCall.Name, Equals, "function_name")
+	c.Assert(fromClause.FunctionCall.Elems, HasLen, 1)
+	c.Assert(fromClause.FunctionCall.Elems[0].Name, Equals, "t")
 }
 
 func (self *QueryParserSuite) TestMultipleAggregateFunctions(c *C) {

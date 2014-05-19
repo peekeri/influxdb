@@ -352,6 +352,7 @@ FROM_CLAUSE:
           $$->names->elems[0] = malloc(sizeof(table_name));
           $$->names->elems[0]->name = $2;
           $$->names->elems[0]->alias = NULL;
+          $$->function_call = NULL;
           $$->from_clause_type = FROM_ARRAY;
         }
         |
@@ -364,6 +365,7 @@ FROM_CLAUSE:
           $$->names->elems[0] = malloc(sizeof(table_name));
           $$->names->elems[0]->name = $2;
           $$->names->elems[0]->alias = NULL;
+          $$->function_call = NULL;
           $$->from_clause_type = FROM_ARRAY;
         }
         |
@@ -379,6 +381,7 @@ FROM_CLAUSE:
           $$->names->elems[1] = malloc(sizeof(table_name));
           $$->names->elems[1]->name = $4;
           $$->names->elems[1]->alias = NULL;
+          $$->function_call = NULL;
           $$->from_clause_type = FROM_MERGE;
         }
         |
@@ -394,9 +397,23 @@ FROM_CLAUSE:
           $$->names->elems[1] = malloc(sizeof(table_name));
           $$->names->elems[1]->name = $6;
           $$->names->elems[1]->alias = $7;
+          $$->function_call = NULL;
           $$->from_clause_type = FROM_INNER_JOIN;
         }
+        |
+        FROM FUNCTION_CALL
+        {
+          $$ = malloc(sizeof(from_clause));
+          $$->names = malloc(sizeof(table_name_array));
+          $$->names->elems = malloc(1 * sizeof(value*));
+          $$->names->size = 1;
+          $$->names->elems[0] = malloc(sizeof(table_name));
+          $$->names->elems[0]->name = $2->args->elems[0];
+          $$->names->elems[0]->alias = NULL;
 
+          $$->function_call = $2;
+          $$->from_clause_type = FROM_FUNCTION_CALL;
+        }
 
 WHERE_CLAUSE:
         WHERE CONDITION

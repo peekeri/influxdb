@@ -431,7 +431,16 @@ func GetFromClause(fromClause *C.from_clause) (*FromClause, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &FromClause{FromClauseType(fromClause.from_clause_type), arr}, nil
+
+	var fun *Value
+	if fromClause.function_call != nil {
+		fun, err = GetValue(fromClause.function_call)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &FromClause{FromClauseType(fromClause.from_clause_type), arr, fun}, nil
 }
 
 func GetIntoClause(intoClause *C.into_clause) (*IntoClause, error) {
