@@ -28,11 +28,23 @@ func (self *FilteringEngine) YieldPoint(seriesName *string, columnNames []string
 }
 
 func (self *FilteringEngine) YieldSeries(seriesIncoming *p.Series) bool {
-	if !self.shouldFilter {
-		return self.processor.YieldSeries(seriesIncoming)
+	series := seriesIncoming
+
+	fromClause := self.query.GetFromClause()
+	if fromClause.FunctionCall != nil {
+		s, err := ApplyFunction(fromClause.FunctionCall, seriesIncoming)
+		if err != nil {
+			log.Error("Error while applying function to series: %s [query: %s]", err, self.query.GetQueryString())
+			return false
+		}
+		series = s
 	}
 
-	series, err := Filter(self.query, seriesIncoming)
+	if !self.shouldFilter {
+		return self.processor.YieldSeries(series)
+	}
+
+	series, err := Filter(self.query, series)
 	if err != nil {
 		log.Error("Error while filtering points: %s [query = %s]", err, self.query.GetQueryString())
 		return false
